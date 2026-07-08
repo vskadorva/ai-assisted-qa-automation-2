@@ -2,7 +2,10 @@
   "name": "ai-assisted-qa-automation-2",
   "version": "1.0.0",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test:collect-screenshots": "node scripts/collect-failure-screenshots.mjs",
+    "test:jira-attach": "node scripts/jira-attach-screenshots.mjs"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
