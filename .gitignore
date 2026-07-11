@@ -10,3 +10,5 @@ node_modules/
 .env
 .playwright-mcp/
 test-evidence/
+
+.DS_Store

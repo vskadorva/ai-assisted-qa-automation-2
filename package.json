@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "cleanup:programs": "node scripts/delete-all-programs.mjs",
+    "cleanup:programs:confirm": "node scripts/delete-all-programs.mjs --confirm",
     "test:collect-screenshots": "node scripts/collect-failure-screenshots.mjs",
     "test:jira-attach": "node scripts/jira-attach-screenshots.mjs"
   },
