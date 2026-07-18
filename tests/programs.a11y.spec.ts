@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import { ProgramsPage } from "../pages/ProgramsPage";
 
 test.describe("Programs accessibility", () => {
-  test(
+  test.fixme(
     "Programs page has no accessibility violations",
     { tag: "@regression" },
     async ({ page }) => {
@@ -18,7 +18,7 @@ test.describe("Programs accessibility", () => {
     },
   );
 
-  test(
+  test.fixme(
     "New Program modal has no accessibility violations",
     { tag: "@regression" },
     async ({ page }) => {

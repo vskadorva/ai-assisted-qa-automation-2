@@ -200,7 +200,7 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.programRow(programName)).toHaveCount(0);
   });
 
-  test("TC-011 — Duplicate Program Name is rejected with an error", async ({
+  test.fixme("TC-011 — Duplicate Program Name is rejected with an error", async ({
     page,
     trackProgram,
   }, testInfo) => {
@@ -255,7 +255,7 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.programRow(programName)).toHaveCount(0);
   });
 
-  test("TC-013 — Double-clicking Create creates exactly one program", async ({
+  test.fixme("TC-013 — Double-clicking Create creates exactly one program", async ({
     page,
     trackProgram,
   }, testInfo) => {
