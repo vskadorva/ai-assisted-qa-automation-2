@@ -1,5 +1,5 @@
 import { type Locator, type Page } from "@playwright/test";
-import { extractProgramId } from "../fixtures/program-api";
+import { extractProgramId, getCleanupApiToken } from "../fixtures/program-api";
 import { NewProgramModal } from "./NewProgramModal";
 
 type TrackProgram = (uuid: string) => void;
@@ -15,6 +15,8 @@ export class ProgramsPage {
   readonly selectProgramHint: Locator;
   readonly firstEditButton: Locator;
   readonly firstDeleteButton: Locator;
+  readonly emptyStateMessage: Locator;
+  readonly emptyStateCreateButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -33,6 +35,39 @@ export class ProgramsPage {
     this.firstDeleteButton = page
       .getByRole("button", { name: /^Delete / })
       .first();
+    this.emptyStateMessage = page.getByText(
+      "No programs yet. Create your first program to get started.",
+    );
+    this.emptyStateCreateButton = page.getByRole("button", {
+      name: "Create Program",
+    });
+  }
+
+  async hasPrograms(): Promise<boolean> {
+    const token = await getCleanupApiToken();
+    if (!token) {
+      throw new Error(
+        "Could not obtain API token to check program list. Set DIDAXIS_API_TOKEN or DIDAXIS_EMAIL/DIDAXIS_PASSWORD.",
+      );
+    }
+
+    const baseUrl = process.env.DIDAXIS_URL ?? "https://test.didaxis.studio";
+    const res = await fetch(`${baseUrl}/api/programs?limit=1`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error(`GET /api/programs failed: ${res.status}`);
+    }
+
+    const body = await res.json();
+    const programs = Array.isArray(body)
+      ? body
+      : body?.data && Array.isArray(body.data)
+        ? body.data
+        : [];
+
+    return programs.length > 0;
   }
 
   firstProgramRow(): Locator {

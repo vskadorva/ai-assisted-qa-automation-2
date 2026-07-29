@@ -121,11 +121,17 @@ test.describe("DS-1: Create new academic program", () => {
     page,
   }) => {
     const programsPage = new ProgramsPage(page);
+    const hasPrograms = await programsPage.hasPrograms();
 
-    await expect(programsPage.programColumnHeader).toBeVisible();
-    await expect(programsPage.selectProgramHint).toBeVisible();
-    await expect(programsPage.firstEditButton).toBeVisible();
-    await expect(programsPage.firstDeleteButton).toBeVisible();
+    if (hasPrograms) {
+      await expect(programsPage.programColumnHeader).toBeVisible();
+      await expect(programsPage.selectProgramHint).toBeVisible();
+      await expect(programsPage.firstEditButton).toBeVisible();
+      await expect(programsPage.firstDeleteButton).toBeVisible();
+    } else {
+      await expect(programsPage.emptyStateMessage).toBeVisible();
+      await expect(programsPage.emptyStateCreateButton).toBeVisible();
+    }
   });
 
   test("TC-025 — Program creation form includes optional AI Generation Config fields", async ({
