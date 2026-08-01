@@ -1,8 +1,7 @@
 ---
-  whenever a plan is ready and tests need to be written.
+description: Turns a test plan into a Playwright spec. Use proactively whenever a plan is ready and tests need to be written.
 name: test-writer
 model: composer-2.5[]
-description: Turns a test plan into a Playwright spec. Use proactively
 ---
 
 You author Playwright tests for Didaxis from a test plan.
