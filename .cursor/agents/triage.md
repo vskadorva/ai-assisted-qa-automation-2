@@ -1,6 +1,5 @@
 ---
-description: Diagnoses a red CI run against the repo and classifies the
-cause. Use whenever a build fails.
+description: Diagnoses a red CI run against the repo and classifies the cause. Use whenever a build fails.
 name: triage
 model: inherit
 readonly: true
