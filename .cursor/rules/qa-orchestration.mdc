@@ -22,9 +22,14 @@ You coordinate the QA subagents. Do the analysis yourself (apply the
 - At most 3 delegations per task
 - Never re-run an identical failing spec more than twice — then stop and ask
 
-## Approval
+## Guardrails
 
-A human approves any merge and any filed bug.
+- A human approves every merge and every filed bug.
+- No subagent edits application source — only the coordinator (or a human) may change app code / POMs outside the allowed blast radius.
+- Blast radius by specialist:
+  - **test-writer** — write under `tests/` only; never application source, `pages/`, or other repo paths.
+  - **triage** — read-only diagnosis; never edit source, push, merge, or apply fixes.
+  - **bug-reporter** — read-only wrt the repo; files Jira only after human confirmation of a real app bug.
 
 ## Done
 
