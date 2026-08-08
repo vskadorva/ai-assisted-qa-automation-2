@@ -1,4 +1,4 @@
-import { type Dialog, type Locator, type Page } from "@playwright/test";
+import { type Locator, type Page } from "@playwright/test";
 import { extractProgramId, getCleanupApiToken } from "../fixtures/program-api";
 import { DeleteProgramModal } from "./DeleteProgramModal";
 import { NewProgramModal } from "./NewProgramModal";
@@ -177,18 +177,16 @@ export class ProgramsPage {
   }
 
   deleteButton(name: string): Locator {
-    return this.programRow(name).getByRole("button", { name: /^Delete / });
+    return this.page.getByRole("button", { name: `Delete ${name}` });
   }
 
-  async openDeleteConfirmation(name: string): Promise<Dialog> {
-    const dialogPromise = this.deleteProgramModal.waitForOpen();
+  async openDeleteConfirmation(name: string): Promise<void> {
     await this.deleteButton(name).click();
-    return dialogPromise;
   }
 
   async confirmDelete(name: string): Promise<void> {
-    const dialog = await this.openDeleteConfirmation(name);
-    await this.deleteProgramModal.accept(dialog);
+    await this.openDeleteConfirmation(name);
+    await this.deleteProgramModal.clickConfirm();
   }
 
   async waitForProgramDelete(action: () => Promise<void>): Promise<void> {

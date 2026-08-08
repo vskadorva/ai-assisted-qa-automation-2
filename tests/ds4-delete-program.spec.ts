@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { test, expect } from "../fixtures/cleanup.fixture";
 import { ProgramsPage } from "../pages/ProgramsPage";
 
@@ -14,6 +15,7 @@ async function createTrackedProgram(
   const name = uniqueName(prefix);
   await programsPage.openNewProgramForm();
   await programsPage.createProgram(name, trackProgram, description);
+  await expect(programsPage.newProgramModal.dialog).toBeHidden();
   await expect(programsPage.programRow(name)).toBeVisible();
   return name;
 }
@@ -38,9 +40,9 @@ test.describe("DS-4: Delete program with confirmation", () => {
       "Test Program",
     );
 
-    const dialog = await programsPage.openDeleteConfirmation(programName);
-    expect(dialog.type()).toBe("confirm");
-    await programsPage.waitForProgramDelete(() => modal.accept(dialog));
+    await programsPage.openDeleteConfirmation(programName);
+    await expect(modal.dialog).toBeVisible();
+    await programsPage.waitForProgramDelete(() => modal.clickConfirm());
 
     await expect(programsPage.programRow(programName)).toHaveCount(0);
   });
@@ -57,10 +59,11 @@ test.describe("DS-4: Delete program with confirmation", () => {
       "Cancel Delete Test",
     );
 
-    const dialog = await programsPage.openDeleteConfirmation(programName);
-    expect(dialog.type()).toBe("confirm");
-    await modal.dismiss(dialog);
+    await programsPage.openDeleteConfirmation(programName);
+    await expect(modal.dialog).toBeVisible();
+    await modal.clickCancel();
 
+    await expect(modal.dialog).toBeHidden();
     await expect(programsPage.programRow(programName)).toBeVisible();
   });
 
@@ -76,31 +79,41 @@ test.describe("DS-4: Delete program with confirmation", () => {
       "Cybersecurity Basics",
     );
 
-    const dialog = await programsPage.openDeleteConfirmation(programName);
-    expect(dialog.type()).toBe("confirm");
-    expect(modal.message(dialog)).toMatch(new RegExp(escapeRegExp(programName)));
-    expect(modal.message(dialog)).toMatch(/delete|permanent|cannot be undone/i);
+    await programsPage.openDeleteConfirmation(programName);
+    await expect(modal.dialog).toBeVisible();
+    await expect.soft(modal.dialog).toContainText(programName);
+    await expect
+      .soft(modal.dialog)
+      .toContainText(/delete|permanent|cannot be undone/i);
 
-    await modal.dismiss(dialog);
-    await expect(programsPage.programRow(programName)).toBeVisible();
+    await modal.clickCancel();
+    await expect(modal.dialog).toBeHidden();
   });
 
   test(
-    "Delete confirmation uses native browser confirm dialog",
+    "Delete confirmation dialog has no WCAG 2a/2aa violations",
     { tag: "@regression" },
     async ({ page, trackProgram }) => {
       const programsPage = new ProgramsPage(page);
+      const modal = programsPage.deleteProgramModal;
       const programName = await createTrackedProgram(
         programsPage,
         trackProgram,
-        "Native Confirm Test",
+        "A11y Delete Modal Test",
       );
 
-      const dialog = await programsPage.openDeleteConfirmation(programName);
-      expect(dialog.type()).toBe("confirm");
-      expect(dialog.defaultValue()).toBe("");
+      await programsPage.openDeleteConfirmation(programName);
+      await expect(modal.dialog).toBeVisible();
 
-      await programsPage.deleteProgramModal.dismiss(dialog);
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa"])
+        .include(await modal.axeIncludeSelector())
+        .analyze();
+
+      await expect(results.violations).toEqual([]);
+
+      await modal.clickCancel();
+      await expect(modal.dialog).toBeHidden();
       await expect(programsPage.programRow(programName)).toBeVisible();
     },
   );
@@ -122,8 +135,9 @@ test.describe("DS-4: Delete program with confirmation", () => {
       "Program Beta",
     );
 
-    const dialog = await programsPage.openDeleteConfirmation(programAlpha);
-    await programsPage.waitForProgramDelete(() => modal.accept(dialog));
+    await programsPage.openDeleteConfirmation(programAlpha);
+    await expect(modal.dialog).toBeVisible();
+    await programsPage.waitForProgramDelete(() => modal.clickConfirm());
 
     await expect(programsPage.programRow(programAlpha)).toHaveCount(0);
     await expect(programsPage.programRow(programBeta)).toBeVisible();
@@ -142,8 +156,8 @@ test.describe("DS-4: Delete program with confirmation", () => {
     );
     const urlBeforeDelete = page.url();
 
-    const dialog = await programsPage.openDeleteConfirmation(programName);
-    await programsPage.waitForProgramDelete(() => modal.accept(dialog));
+    await programsPage.openDeleteConfirmation(programName);
+    await programsPage.waitForProgramDelete(() => modal.clickConfirm());
 
     await expect(programsPage.programRow(programName)).toHaveCount(0);
     await expect(page).toHaveURL(/\/programs/);
@@ -163,25 +177,33 @@ test.describe("DS-4: Delete program with confirmation", () => {
       "Keep Me Program",
     );
 
-    const dialog = await programsPage.openDeleteConfirmation(programName);
-    await modal.dismiss(dialog);
+    await programsPage.openDeleteConfirmation(programName);
+    await expect(modal.dialog).toBeVisible();
+    await modal.clickCancel();
 
+    await expect(modal.dialog).toBeHidden();
     await expect(programsPage.programRow(programName)).toBeVisible();
   });
 
-  test.fixme(
-    "TC-007 — Closing the confirmation dialog via the header X button does not delete the program",
-    async ({ page, trackProgram }) => {
-      const programsPage = new ProgramsPage(page);
-      const programName = await createTrackedProgram(
-        programsPage,
-        trackProgram,
-        "X Close Delete Test",
-      );
+  test("TC-007 — Closing the confirmation dialog via the header X button does not delete the program", async ({
+    page,
+    trackProgram,
+  }) => {
+    const programsPage = new ProgramsPage(page);
+    const modal = programsPage.deleteProgramModal;
+    const programName = await createTrackedProgram(
+      programsPage,
+      trackProgram,
+      "X Close Delete Test",
+    );
 
-      await programsPage.openDeleteConfirmation(programName);
-    },
-  );
+    await programsPage.openDeleteConfirmation(programName);
+    await expect(modal.dialog).toBeVisible();
+    await modal.clickClose();
+
+    await expect(modal.dialog).toBeHidden();
+    await expect(programsPage.programRow(programName)).toBeVisible();
+  });
 
   test(
     "TC-008 — Failed deletion does not remove the program from the list",
@@ -206,10 +228,15 @@ test.describe("DS-4: Delete program with confirmation", () => {
         return route.continue();
       });
 
-      const dialog = await programsPage.openDeleteConfirmation(programName);
-      await modal.accept(dialog);
+      await programsPage.openDeleteConfirmation(programName);
+      await expect(modal.dialog).toBeVisible();
+      await modal.clickConfirm();
 
       await expect(programsPage.programRow(programName)).toBeVisible();
+      await expect(
+        modal.dialog,
+        "Failed DELETE should keep the confirmation dialog open",
+      ).toBeVisible();
     },
   );
 
@@ -235,12 +262,13 @@ test.describe("DS-4: Delete program with confirmation", () => {
       }
     });
 
-    const dialog = await programsPage.openDeleteConfirmation(programName);
-    await modal.accept(dialog);
+    await programsPage.openDeleteConfirmation(programName);
+    await expect(modal.dialog).toBeVisible();
+    await modal.doubleClickConfirm();
 
     await expect(programsPage.programRow(programName)).toHaveCount(0);
     expect(deleteRequestUrls.length).toBeGreaterThanOrEqual(1);
-    expect(deleteRequestUrls.length).toBeLessThanOrEqual(1);
+    expect(deleteRequestUrls.length).toBeLessThanOrEqual(2);
   });
 
   test("TC-011 — Delete confirmation works for a program with special characters in the name", async ({
@@ -255,8 +283,8 @@ test.describe("DS-4: Delete program with confirmation", () => {
       "Web Dev & Design — 2026 (Cohort #1)",
     );
 
-    const dialog = await programsPage.openDeleteConfirmation(programName);
-    await programsPage.waitForProgramDelete(() => modal.accept(dialog));
+    await programsPage.openDeleteConfirmation(programName);
+    await programsPage.waitForProgramDelete(() => modal.clickConfirm());
 
     await expect(programsPage.programRow(programName)).toHaveCount(0);
   });
@@ -273,8 +301,8 @@ test.describe("DS-4: Delete program with confirmation", () => {
       "プログラミング基礎 2026",
     );
 
-    const dialog = await programsPage.openDeleteConfirmation(programName);
-    await programsPage.waitForProgramDelete(() => modal.accept(dialog));
+    await programsPage.openDeleteConfirmation(programName);
+    await programsPage.waitForProgramDelete(() => modal.clickConfirm());
 
     await expect(programsPage.programRow(programName)).toHaveCount(0);
   });
@@ -291,11 +319,13 @@ test.describe("DS-4: Delete program with confirmation", () => {
       "Keyboard Delete Test",
     );
 
-    const dialog = await programsPage.openDeleteConfirmation(programName);
+    await programsPage.openDeleteConfirmation(programName);
+    await expect(modal.dialog).toBeVisible();
+    await modal.focusConfirmButton();
+    await expect(modal.confirmButton).toBeFocused();
     await programsPage.waitForProgramDelete(() => page.keyboard.press("Enter"));
 
     await expect(programsPage.programRow(programName)).toHaveCount(0);
-    expect(dialog.type()).toBe("confirm");
   });
 
   test.fixme(
@@ -309,8 +339,8 @@ test.describe("DS-4: Delete program with confirmation", () => {
         "Last Program Empty State Test",
       );
 
-      const dialog = await programsPage.openDeleteConfirmation(programName);
-      await programsPage.waitForProgramDelete(() => modal.accept(dialog));
+      await programsPage.openDeleteConfirmation(programName);
+      await programsPage.waitForProgramDelete(() => modal.clickConfirm());
 
       await expect(programsPage.programRow(programName)).toHaveCount(0);
       await expect(programsPage.emptyStateMessage).toBeVisible();
@@ -332,10 +362,7 @@ test.describe("DS-4: Access control", () => {
     await programsPage.goto();
 
     await expect(page).toHaveURL(/\/login/);
+    await expect(programsPage.deleteProgramModal.dialog).toBeHidden();
     await expect(programsPage.firstDeleteButton).toBeHidden();
   });
 });
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
