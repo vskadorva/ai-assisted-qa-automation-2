@@ -1,4 +1,4 @@
-import { type Locator, type Page } from "@playwright/test";
+import { type Dialog, type Locator, type Page } from "@playwright/test";
 import { extractProgramId, getCleanupApiToken } from "../fixtures/program-api";
 import { DeleteProgramModal } from "./DeleteProgramModal";
 import { NewProgramModal } from "./NewProgramModal";
@@ -177,18 +177,18 @@ export class ProgramsPage {
   }
 
   deleteButton(name: string): Locator {
-    return this.programRow(name).getByRole("button", {
-      name: new RegExp(`^Delete ${escapeRegExp(name)}`),
-    });
+    return this.programRow(name).getByRole("button", { name: /^Delete / });
   }
 
-  async openDeleteConfirmation(name: string): Promise<void> {
+  async openDeleteConfirmation(name: string): Promise<Dialog> {
+    const dialogPromise = this.deleteProgramModal.waitForOpen();
     await this.deleteButton(name).click();
+    return dialogPromise;
   }
 
   async confirmDelete(name: string): Promise<void> {
-    await this.openDeleteConfirmation(name);
-    await this.deleteProgramModal.clickConfirm();
+    const dialog = await this.openDeleteConfirmation(name);
+    await this.deleteProgramModal.accept(dialog);
   }
 
   async waitForProgramDelete(action: () => Promise<void>): Promise<void> {
@@ -202,8 +202,4 @@ export class ProgramsPage {
       action(),
     ]);
   }
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
