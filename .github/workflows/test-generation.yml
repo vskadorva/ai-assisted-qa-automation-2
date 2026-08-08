@@ -1,0 +1,63 @@
+name: Test Generation
+
+on:
+  schedule:
+    - cron: "0 6 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      DIDAXIS_URL: ${{ secrets.DIDAXIS_URL }}
+      DIDAXIS_EMAIL: ${{ secrets.DIDAXIS_EMAIL }}
+      DIDAXIS_PASSWORD: ${{ secrets.DIDAXIS_PASSWORD }}
+      DIDAXIS_API_TOKEN: ${{ secrets.DIDAXIS_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Install Cursor CLI
+        run: |
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
+
+      - name: Work In Progress backlog
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
+          GH_PAT_AI_2: ${{ secrets.GH_PAT_AI_2 }}
+        run: |
+          agent -p --force --trust --output-format text "$(cat <<'EOF'
+          Work the In Progress backlog per .cursor/rules/qa-orchestration.mdc Backlog mode.
+
+          Queue: DS tickets in status "In Progress" that do not have the "tests-generated" label.
+          Budget: at most 5 tickets this run.
+          Per ticket: analyze (jira-ticket-to-gherkin) → write a conforming Playwright spec under tests/ via test-writer → run npx playwright test → triage on red.
+          Output: one PR per ticket, link the ticket on the PR, add the "tests-generated" label so the next run skips it.
+          Never merge or close without a human. Never decide when to start — this workflow is the trigger.
+          On a repeated identical failure, stop that ticket and move on.
+          EOF
+          )"
+
+      - name: playwright-report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

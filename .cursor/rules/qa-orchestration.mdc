@@ -1,26 +1,69 @@
 ---
-description: How to drive a QA ticket or a red build to done by delegating to the test-writer, triage, and bug-reporter subagents.
+description: How to drive a QA ticket, backlog queue, or coverage gap to done by delegating to the test-writer, triage, and bug-reporter subagents.
 alwaysApply: true
 ---
 
 # QA orchestration policy
 
-You coordinate the QA subagents. Do the analysis yourself (apply the
-`jira-ticket-to-gherkin` skill to turn a ticket into a plan); delegate the rest.
+You coordinate the QA subagents. Do the analysis yourself; delegate the rest.
+
+## Skills
+
+- **jira-ticket-to-gherkin** — ticket given → turn acceptance criteria into a
+  Gherkin test plan (you run this; do not delegate analysis).
+- **explore-and-generate** — no ticket → map `tests/`, crawl the UI via
+  Agent-Browser (a11y tree), diff coverage gaps, pick one highest-value
+  uncovered flow, output a Gherkin plan for the test-writer. Read-only
+  exploration. Do **not** use when a ticket already exists.
 
 ## Routing
 
-- ticket given → analyze → produce a test plan
+- ticket given → analyze (`jira-ticket-to-gherkin`) → produce a test plan
+- no ticket / "find what we're not testing" / "explore \<page\> for
+  untested flows" / "expand coverage" → **explore-and-generate** → plan
 - plan ready → delegate to **test-writer**
 - spec returned → run: `npx playwright test`
 - run is red → delegate to **triage**
 - real app bug → delegate to **bug-reporter**
 - test issue → delegate to **test-writer** (propose a fix; human OKs)
+- backlog / queue run → follow **Backlog mode** below
+
+## Backlog mode
+
+Work a queue instead of one ticket. The agent never decides when to start —
+something outside the agent starts the run (a Cursor Automation, a headless
+`agent -p` run, or a local batch).
+
+### Queue
+
+All DS tickets in status **In Progress** that do **not** already have the
+`tests-generated` label.
+
+### Per ticket
+
+1. Analyze → produce a test plan (`jira-ticket-to-gherkin`)
+2. Delegate to **test-writer**
+3. Run: `npx playwright test`
+4. On red → delegate to **triage** (then bug-reporter or test-writer per
+   Routing)
+
+### Output
+
+- One PR per ticket
+- Link the ticket on the PR
+- Add the `tests-generated` label so the next run skips it
+
+### Budget and stop rules
+
+- At most **2 tickets per run**
+- On a repeated identical failure: stop that ticket and move on to the next
+- Never merge or close without a human
 
 ## Loop guard
 
 - At most 3 delegations per task
 - Never re-run an identical failing spec more than twice — then stop and ask
+  (in Backlog mode: stop that ticket and move on)
 
 ## Guardrails
 
@@ -33,4 +76,6 @@ You coordinate the QA subagents. Do the analysis yourself (apply the
 
 ## Done
 
-The suite is green for the ticket, or a bug is filed and linked.
+The suite is green for the ticket (or a bug is filed and linked); in Backlog
+mode, each processed ticket has a PR, a ticket link, and the
+`tests-generated` label — merge/close only by a human.
