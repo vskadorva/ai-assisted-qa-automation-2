@@ -172,4 +172,39 @@ export class ProgramsPage {
   async closeModalWithoutSaving(): Promise<void> {
     await this.newProgramModal.clickCancel();
   }
+
+  deleteButton(name: string): Locator {
+    return this.programRow(name).getByRole("button", {
+      name: new RegExp(`^Delete\\s+${escapeRegExp(name)}$`),
+    });
+  }
+
+  async clickDelete(name: string): Promise<void> {
+    await this.deleteButton(name).click();
+  }
+
+  /**
+   * Clicks Delete and accepts the native confirm() dialog.
+   * Dialog handler must be registered before the click.
+   */
+  async deleteProgramWithConfirm(name: string): Promise<void> {
+    this.page.once("dialog", async (dialog) => {
+      await dialog.accept();
+    });
+    await this.clickDelete(name);
+  }
+
+  /**
+   * Clicks Delete and dismisses the native confirm() dialog (Cancel).
+   */
+  async cancelDeleteProgram(name: string): Promise<void> {
+    this.page.once("dialog", async (dialog) => {
+      await dialog.dismiss();
+    });
+    await this.clickDelete(name);
+  }
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
