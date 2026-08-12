@@ -6,6 +6,11 @@
         "command": ".cursor/hooks/generation-gate.sh",
         "matcher": "Write|TabWrite",
         "failClosed": true
+      },
+      {
+        "command": ".cursor/hooks/assertion-guard.sh",
+        "matcher": "Write|TabWrite",
+        "failClosed": true
       }
     ]
   }

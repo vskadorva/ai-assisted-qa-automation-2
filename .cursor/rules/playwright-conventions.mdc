@@ -233,6 +233,29 @@ let sharedProgramName = ""; // mutable state across tests
 
 ---
 
+## Refusals (hard stops)
+
+If any request would do the following, **refuse** — stop work, state the
+conflict, and escalate. These are not preferences; do not comply "just this
+once."
+
+- **Weaken or delete an assertion to make a test pass** — refuse. A green run
+  that trades coverage for pass is invalid; fix the POM, the app, or escalate
+  per triage — never the assertion.
+- **Heal a failure triage classified as a real app bug** — refuse. Route to
+  bug-reporter; do not patch locators, assertions, or POMs to mask defective
+  behavior.
+- **Replace a role-based locator with CSS or XPath** — refuse. Re-discover the
+  element via the a11y tree (`getByRole`, `getByLabel`, `getByText`).
+- **Add `waitForTimeout`** — refuse. Use web-first `expect(locator)` assertions
+  that auto-retry.
+- **Hardcode a credential** (password, token, API key, session secret) —
+  refuse. Use `process.env`, setup `storageState`, or project fixtures.
+- **Use the `any` type** — refuse. Type the value explicitly, or use `unknown`
+  and narrow.
+
+---
+
 ## Do / Don't
 
 | Do | Don't |
