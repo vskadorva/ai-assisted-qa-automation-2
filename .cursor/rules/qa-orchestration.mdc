@@ -1,5 +1,5 @@
 ---
-description: How to drive a QA ticket, backlog queue, or coverage gap to done by delegating to the test-writer, triage, and bug-reporter subagents.
+description: How to drive a QA ticket, backlog queue, or coverage gap to done by delegating to the test-writer, triage, self-heal, and bug-reporter subagents.
 alwaysApply: true
 ---
 
@@ -15,6 +15,10 @@ You coordinate the QA subagents. Do the analysis yourself; delegate the rest.
   Agent-Browser (a11y tree), diff coverage gaps, pick one highest-value
   uncovered flow, output a Gherkin plan for the test-writer. Read-only
   exploration. Do **not** use when a ticket already exists.
+- **self-heal** — after triage classifies **test issue (drift)**, re-discover
+  the element via Agent-Browser (a11y tree), patch the POM with a minimal
+  role-based diff, re-run to prove green with assertions unchanged, and open
+  a repair PR. Never for a real app bug; never touch spec assertions.
 
 ## Routing
 
@@ -23,10 +27,34 @@ You coordinate the QA subagents. Do the analysis yourself; delegate the rest.
   untested flows" / "expand coverage" → **explore-and-generate** → plan
 - plan ready → delegate to **test-writer**
 - spec returned → run: `npx playwright test`
-- run is red → delegate to **triage**
-- real app bug → delegate to **bug-reporter**
-- test issue → delegate to **test-writer** (propose a fix; human OKs)
+- run is red → delegate to **triage** → follow **Heal on red** below
 - backlog / queue run → follow **Backlog mode** below
+
+## Heal on red
+
+On a red run, delegate to **triage** to classify. Then route by classification:
+
+**Drift (test issue)** — apply **self-heal** (you run the skill; do not
+delegate POM edits to test-writer):
+
+1. Re-discover the failing element via Agent-Browser (a11y tree).
+2. Patch the POM — minimal role-based diff only; spec assertions unchanged.
+3. Re-run to prove green with assertions unchanged.
+4. Open a **repair PR** linked to the failing CI run and triage diagnosis.
+
+**Real app bug** — delegate to **bug-reporter** to file and link the Jira
+ticket. **Never heal a bug.**
+
+**Inconclusive** — stop and escalate; do not heal or file until a human
+decides.
+
+### Heal budget and stop rules
+
+- At most **5 heals per run** (one locator repair per heal).
+- Stop and escalate if a heal will not prove green without weakening an
+  assertion — never heal an assertion (see Refusals in
+  `playwright-conventions.mdc` and the `assertion-guard` hook).
+- Never merge a repair PR without a human.
 
 ## Backlog mode
 
@@ -44,8 +72,8 @@ All DS tickets in status **In Progress** that do **not** already have the
 1. Analyze → produce a test plan (`jira-ticket-to-gherkin`)
 2. Delegate to **test-writer**
 3. Run: `npx playwright test`
-4. On red → delegate to **triage** (then bug-reporter or test-writer per
-   Routing)
+4. On red → delegate to **triage** (then **self-heal**, **bug-reporter**, or
+   escalate per **Heal on red**)
 
 ### Output
 
@@ -68,7 +96,9 @@ All DS tickets in status **In Progress** that do **not** already have the
 ## Guardrails
 
 - A human approves every merge and every filed bug.
-- No subagent edits application source — only the coordinator (or a human) may change app code / POMs outside the allowed blast radius.
+- No subagent edits application source — only the coordinator (or a human) may
+  change app code / POMs outside the allowed blast radius. The coordinator
+  applies **self-heal** for POM locator drift after triage confirms drift.
 - Blast radius by specialist:
   - **test-writer** — write under `tests/` only; never application source, `pages/`, or other repo paths.
   - **triage** — read-only diagnosis; never edit source, push, merge, or apply fixes.
