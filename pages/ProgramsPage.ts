@@ -21,7 +21,7 @@ export class ProgramsPage {
   constructor(page: Page) {
     this.page = page;
     this.newProgramModal = new NewProgramModal(page);
-    this.heading = page.locator("h1").filter({ hasText: "Programs" });
+    this.heading = page.getByRole("heading", { name: "Programs", level: 2 });
     this.subtitle = page.getByText("Manage academic programs and semesters");
     this.newProgramButton = page.getByRole("button", { name: "+ New Program" });
     this.programsTable = page.getByRole("table");
