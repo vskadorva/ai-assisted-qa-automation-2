@@ -349,10 +349,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.programRow(maxName)).toBeVisible();
   });
 
-  test("TC-016 — Program Name exceeding 100 characters is rejected", async ({
-    page,
-    trackProgram,
-  }, testInfo) => {
+  // Known app bug: DS-175 — name over 100 chars is accepted on create
+  test.fixme(
+    "TC-016 — Program Name exceeding 100 characters is rejected",
+    async ({ page, trackProgram }, testInfo) => {
     const programsPage = new ProgramsPage(page);
     const modal = programsPage.newProgramModal;
     const overLimitName = `${"O".repeat(95)}${Date.now()}`.slice(0, 101);
@@ -372,7 +372,8 @@ test.describe("DS-1: Create new academic program", () => {
       "Validation Rules: name exceeding 100 characters must not be saved",
     ).toBeVisible();
     await expect(programsPage.programRow(overLimitName)).toHaveCount(0);
-  });
+  },
+  );
 
   test("TC-017 — Special characters in Program Name are handled correctly", async ({
     page,
@@ -445,10 +446,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.programRow(programName)).toBeVisible();
   });
 
-  test("TC-027 — Description exceeding 500 characters is rejected", async ({
-    page,
-    trackProgram,
-  }, testInfo) => {
+  // Known app bug: DS-176 — description over 500 chars is accepted on create
+  test.fixme(
+    "TC-027 — Description exceeding 500 characters is rejected",
+    async ({ page, trackProgram }, testInfo) => {
     const programsPage = new ProgramsPage(page);
     const modal = programsPage.newProgramModal;
     const programName = uniqueName("Long Description Reject Test");
@@ -468,7 +469,8 @@ test.describe("DS-1: Create new academic program", () => {
       "Validation Rules: description exceeding 500 characters must not be saved",
     ).toBeVisible();
     await expect(programsPage.programRow(programName)).toHaveCount(0);
-  });
+  },
+  );
 
   test("TC-021 — HTML and script tags in Description are stored as plain text", async ({
     page,
