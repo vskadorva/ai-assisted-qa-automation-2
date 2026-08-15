@@ -10,7 +10,10 @@ test.describe("DS-119: Dashboard displaying the right components", () => {
     await expect(dashboardPage.heading).toBeVisible();
   });
 
-  test("TC-001 — Navigate to the Dashboard", async ({ page }) => {
+  test(
+    "TC-001 — Navigate to the Dashboard",
+    { tag: "@smoke" },
+    async ({ page }) => {
     const dashboardPage = new DashboardPage(page);
 
     await expect(dashboardPage.programsCard).toBeVisible();
@@ -39,7 +42,10 @@ test.describe("DS-119: Dashboard displaying the right components", () => {
     },
   );
 
-  test("TC-002 — Successfully navigate to Program Page", async ({ page }) => {
+  test(
+    "TC-002 — Successfully navigate to Program Page",
+    { tag: "@e2e" },
+    async ({ page }) => {
     const dashboardPage = new DashboardPage(page);
     const programsPage = new ProgramsPage(page);
 
@@ -49,7 +55,10 @@ test.describe("DS-119: Dashboard displaying the right components", () => {
     await expect(programsPage.heading).toBeVisible();
   });
 
-  test("TC-003 — Successfully navigate to Calendar Page", async ({ page }) => {
+  test(
+    "TC-003 — Successfully navigate to Calendar Page",
+    { tag: "@e2e" },
+    async ({ page }) => {
     const dashboardPage = new DashboardPage(page);
 
     await dashboardPage.clickCalendarCard();
@@ -58,7 +67,10 @@ test.describe("DS-119: Dashboard displaying the right components", () => {
     await expect(page.getByRole("heading", { name: "Calendar" })).toBeVisible();
   });
 
-  test("TC-004 — Successfully navigate to Validation Page", async ({
+  test(
+    "TC-004 — Successfully navigate to Validation Page",
+    { tag: "@e2e" },
+    async ({
     page,
   }) => {
     const dashboardPage = new DashboardPage(page);
@@ -71,7 +83,10 @@ test.describe("DS-119: Dashboard displaying the right components", () => {
     ).toBeVisible();
   });
 
-  test("TC-005 — Successfully navigate to AI Assist Page", async ({ page }) => {
+  test(
+    "TC-005 — Successfully navigate to AI Assist Page",
+    { tag: "@e2e" },
+    async ({ page }) => {
     const dashboardPage = new DashboardPage(page);
 
     await dashboardPage.clickAiAssistCard();
@@ -80,7 +95,10 @@ test.describe("DS-119: Dashboard displaying the right components", () => {
     await expect(page.getByRole("heading", { name: "AI Assist" })).toBeVisible();
   });
 
-  test("TC-006 — Dashboard shows descriptive subtitles for each block", async ({
+  test(
+    "TC-006 — Dashboard shows descriptive subtitles for each block",
+    { tag: "@sanity" },
+    async ({
     page,
   }) => {
     const dashboardPage = new DashboardPage(page);
@@ -91,7 +109,10 @@ test.describe("DS-119: Dashboard displaying the right components", () => {
     await expect(dashboardPage.aiAssistSubtitle).toBeVisible();
   });
 
-  test("TC-007 — Dashboard shows Quick Start guidance", async ({ page }) => {
+  test(
+    "TC-007 — Dashboard shows Quick Start guidance",
+    { tag: "@sanity" },
+    async ({ page }) => {
     const dashboardPage = new DashboardPage(page);
 
     await expect(dashboardPage.quickStartHeading).toBeVisible();
@@ -102,7 +123,10 @@ test.describe("DS-119: Dashboard displaying the right components", () => {
     await expect(dashboardPage.quickStartContent).toContainText("AI Assist");
   });
 
-  test("TC-009 — Sidebar navigation remains available from the Dashboard", async ({
+  test(
+    "TC-009 — Sidebar navigation remains available from the Dashboard",
+    { tag: "@sanity" },
+    async ({
     page,
   }) => {
     const dashboardPage = new DashboardPage(page);
@@ -117,6 +141,7 @@ test.describe("DS-119: Dashboard displaying the right components", () => {
   // Known product bug: /dashboard renders empty main content; home dashboard is at /
   test.fixme(
     "TC-010 — Direct navigation to /dashboard does not show dashboard blocks",
+    { tag: "@regression" },
     async ({ page }) => {
       const dashboardPage = new DashboardPage(page);
 
@@ -135,7 +160,10 @@ test.describe("DS-119: Dashboard displaying the right components", () => {
     },
   );
 
-  test("TC-011 — Dashboard shows connected status and program count", async ({
+  test(
+    "TC-011 — Dashboard shows connected status and program count",
+    { tag: "@sanity" },
+    async ({
     page,
   }) => {
     const dashboardPage = new DashboardPage(page);
@@ -148,7 +176,10 @@ test.describe("DS-119: Dashboard displaying the right components", () => {
 test.describe("DS-119: Access control", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test("TC-008 — Unauthenticated user cannot access the Dashboard", async ({
+  test(
+    "TC-008 — Unauthenticated user cannot access the Dashboard",
+    { tag: "@smoke" },
+    async ({
     page,
   }) => {
     const dashboardPage = new DashboardPage(page);

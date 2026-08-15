@@ -3,10 +3,18 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:sanity": "playwright test --grep @sanity",
+    "test:regression": "playwright test --grep @regression",
+    "test:api": "playwright test --grep @api",
+    "test:e2e": "playwright test --grep @e2e",
+    "test:destructive": "playwright test --grep @destructive --workers=1",
     "cleanup:programs": "node scripts/delete-all-programs.mjs",
     "cleanup:programs:confirm": "node scripts/delete-all-programs.mjs --confirm",
     "test:collect-screenshots": "node scripts/collect-failure-screenshots.mjs",
-    "test:jira-attach": "node scripts/jira-attach-screenshots.mjs"
+    "test:jira-attach": "node scripts/jira-attach-screenshots.mjs",
+    "eval-report": "bash scripts/generate-eval-report.sh"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +22,7 @@
   "description": "",
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
+    "@faker-js/faker": "^10.6.0",
     "@playwright/test": "^1.61.0",
     "@types/node": "^25.9.3",
     "dotenv": "^17.4.2"

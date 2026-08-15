@@ -98,25 +98,125 @@ test.beforeEach(async ({ page }) => {
 
 **Why:** Prevents slow, flaky per-test login and session drift across the suite. See `auth-strategy.md`.
 
-## 5. Test data
+## 5. Tags
 
-**Standard:** Unique data with `uniqueName()` / `Date.now()`; every test cleans up after itself via `trackProgram`.
+**Standard:** Tag each test with **exactly one** of `@smoke`, `@sanity`, `@regression`, `@api`, `@e2e`, or `@destructive` on the `test()` call — never on `describe`.
+
+| Tag | When to use |
+|-----|-------------|
+| `@smoke` | Fast critical-path checks after deploy (login, one happy create, key nav) |
+| `@sanity` | Core product flows broader than smoke but still short |
+| `@regression` | Full feature coverage — validation, a11y, edge cases, network mocks |
+| `@api` | Contract or helper checks via Playwright `request` (no browser journey) |
+| `@e2e` | Multi-page UI journeys that exercise real navigation end-to-end |
+| `@destructive` | **Only** when the test mutates **shared/global** state (locale, roles, feature flags, org settings) |
+
+**`@destructive` rules:**
+
+- A test that creates data and cleans up **only its own** records via `trackProgram` keeps its importance tag (`@smoke`, `@regression`, etc.) — **not** `@destructive`.
+- Any test that changes shared/global state **must** register an `afterEach` or `afterAll` hook that reverts the mutation before the test file finishes.
+- Run destructive tests serially: `npm run test:destructive` (uses `--workers=1`). Do not set `workers: 1` globally in config.
 
 ```typescript
-// ✅ Good — from tests/ds1-create-program.spec.ts + cleanup fixture
-const programName = uniqueName("Web Development 2026");
-await programsPage.createProgram(programName, trackProgram, description);
+// ✅ Good — importance tag; self-cleaning data only
+test(
+  "TC-002 — Program is created successfully",
+  { tag: "@smoke" },
+  async ({ page, trackProgram }) => {
+    const { name, description } = buildProgram();
+    await programsPage.createProgram(name, trackProgram, description);
+    await expect(programsPage.programRow(name)).toBeVisible();
+  },
+);
+
+// ✅ Good — shared state mutation + mandatory revert hook
+test.afterEach(async ({ page }) => {
+  await settingsPage.restoreDefaultLocale();
+});
+
+test(
+  "TC-050 — Admin switches org locale to French",
+  { tag: "@destructive" },
+  async ({ page }) => {
+    await settingsPage.setOrgLocale("fr-CA");
+    await expect(settingsPage.localeDisplay).toHaveText("fr-CA");
+  },
+);
+```
+
+```typescript
+// ❌ Bad — multiple tags
+test("…", { tag: ["@smoke", "@e2e"] }, async () => {});
+
+// ❌ Bad — @destructive for data the test owns and deletes via trackProgram
+test("create program", { tag: "@destructive" }, async ({ trackProgram }) => {});
+
+// ❌ Bad — mutates org locale with no revert hook
+test("switch locale", { tag: "@destructive" }, async () => {
+  await settingsPage.setOrgLocale("de-DE");
+});
+
+// ❌ Bad — tag on describe
+test.describe("Programs", { tag: "@regression" }, () => {});
+```
+
+**Why:** Tags drive CI slices (`npm run test:smoke`, etc.) and keep parallel runs safe — destructive/global mutations must not race other workers.
+
+**Run tagged slices:**
+
+```bash
+npm run test:smoke
+npm run test:sanity
+npm run test:regression
+npm run test:api
+npm run test:e2e
+npm run test:destructive   # --workers=1
+```
+
+## 6. Test data
+
+**Standard:** Faker factories under `test-data/factories/` for happy-path payloads; curated invalid sets in static `.ts` files under `test-data/invalid/`; secrets and base URLs from `process.env`; repeated API paths and UI copy from enums under `test-data/enums/`. Every test cleans up data it creates via `trackProgram` (or equivalent teardown).
+
+```typescript
+// ✅ Good — factory + cleanup fixture (test-data/factories/program.factory.ts)
+import { buildProgram } from "../test-data/factories/program.factory";
+import { INVALID_PROGRAM_NAMES } from "../test-data/invalid/program-names";
+import { ApiRoutes } from "../test-data/enums/api-routes";
+
+const { name, description } = buildProgram();
+await programsPage.createProgram(name, trackProgram, description);
+
+await modal.fillProgramName(INVALID_PROGRAM_NAMES.whitespaceOnly);
+await expect(modal.createButton).toBeDisabled();
+
+const res = await request.get(ApiRoutes.Programs, {
+  headers: { Authorization: `Bearer ${process.env.DIDAXIS_API_TOKEN}` },
+});
+```
+
+```typescript
+// ✅ Good — example factory (test-data/factories/program.factory.ts)
+import { faker } from "@faker-js/faker";
+
+export function buildProgram(overrides: Partial<ProgramInput> = {}): ProgramInput {
+  const suffix = Date.now();
+  return {
+    name: overrides.name ?? `${faker.commerce.productName()} ${suffix}`,
+    description: overrides.description ?? faker.lorem.sentence(),
+  };
+}
 ```
 
 ```typescript
 // ❌ Bad
-const programName = "Web Development 2026"; // shared, collisions
-// create program and leave it in the environment
+const programName = "Web Development 2026"; // fixed name, collisions
+const token = "Bearer eyJhbGciOi..."; // hardcoded secret
+const invalidName = faker.lorem.word(); // random invalid input — use curated set instead
 ```
 
-**Why:** Prevents cross-test collisions and polluted Didaxis data that makes later runs fail for unrelated reasons.
+**Why:** Prevents cross-test collisions, unrealistic edge inputs, duplicated route strings, and leaked credentials.
 
-## 6. API testing
+## 7. API testing
 
 **Standard:** Prefer Playwright `request` for setup, teardown helpers, and contract checks; never hardcode tokens; never delete data the test did not create. *(Program teardown today uses `fixtures/cleanup.fixture.ts` — keep that path for UI-created programs.)*
 
@@ -140,7 +240,7 @@ const res = await fetch("https://hardcoded-host/api/programs", {
 
 **Why:** Prevents environment lock-in, leaked secrets, and teardown that destroys shared or foreign data.
 
-## 7. Network mocking
+## 8. Network mocking
 
 **Standard:** `page.route` / `fulfill` (or abort) for **500** / **503** / **timeout** / empty / malformed; never mock the endpoint under test; observe real UI copy first; one tag per test.
 
@@ -163,7 +263,7 @@ await expect(page.getByText("Service Unavailable!!!")).toBeVisible();
 
 **Why:** Prevents non-deterministic live-API edge flakes and false failures from invented copy or over-broad routes. See `.cursor/skills/network-mocked-edge-cases/`.
 
-## 8. Accessibility
+## 9. Accessibility
 
 **Standard:** Axe with `.withTags(['wcag2a','wcag2aa'])` on key pages + a keyboard-nav check; never `.disableRules()` to go green.
 
@@ -189,7 +289,7 @@ const results = await new AxeBuilder({ page })
 
 **Why:** Prevents shipping inaccessible UI and false-green a11y suites. See `.cursor/skills/a11y-checks/`.
 
-## 9. Assertions
+## 10. Assertions
 
 **Standard:** Web-first expects; `expect.soft` for independent multi-checks; visual (`toHaveScreenshot`) only where it earns it.
 
@@ -211,25 +311,27 @@ await expect(page).toHaveScreenshot(); // blanket visual by default
 
 **Why:** Prevents masked secondary failures and brittle pixel diffs on layouts that are not under visual contract.
 
-## 10. Anti-flake
+## 11. Anti-flake
 
-**Standard:** CI-only retries (max 2); isolation; `page.clock` for relative time; pinned `locale` / `timezoneId`; never `workers: 1`.
+**Standard:** CI-only retries (max 2); isolation; `page.clock` for relative time; pinned `locale` / `timezoneId`; never set `workers: 1` globally — only via `npm run test:destructive` for `@destructive` tests.
 
 ```typescript
 // ✅ Good — config retries already in playwright.config.ts; clock advised (no in-repo clock yet)
 // retries: process.env.CI ? 2 : 0
 await page.clock.install({ time: new Date("2026-08-04T18:00:00Z") });
+// Serial destructive slice only:
+// npm run test:destructive  →  playwright test --grep @destructive --workers=1
 ```
 
 ```typescript
 // ❌ Bad
 // retries: 5
-// workers: 1
+// playwright.config.ts → workers: 1   // serializes the whole suite
 const label = `Updated ${new Date().toLocaleString()}`; // wall-clock drift local vs CI
 let sharedProgramName = ""; // mutable state across tests
 ```
 
-**Why:** Prevents hidden flake, serial bottlenecks, and date/time assertions that pass locally and fail in CI. *(Pin `locale` + `timezoneId` in config once chosen — not set yet.)*
+**Why:** Prevents hidden flake, suite-wide serial bottlenecks, and date/time assertions that pass locally and fail in CI. *(Pin `locale` + `timezoneId` in config once chosen — not set yet.)*
 
 ---
 
@@ -264,9 +366,10 @@ once."
 | Wait with `expect(locator).toBeVisible()` | Use `waitForTimeout` or `expect(await isVisible())` |
 | Put locators and actions in POMs | Inline locators or `expect` inside POMs |
 | Rely on setup `storageState` | UI-login before every feature test |
-| `uniqueName()` + `trackProgram` | Fixed names or leave programs behind |
+| One tag per test (`@smoke` … `@destructive`) | Multiple tags, tags on `describe`, `@destructive` for self-cleaning data |
+| `buildProgram()` + `trackProgram`; revert hooks for global state | Fixed names, no revert after locale/role/flag changes |
 | Prefer `request` for API/contract checks | Hardcode tokens or delete foreign data |
 | Narrow `page.route` + observed UI copy | Mock the endpoint under test or invent strings |
 | Axe `wcag2a`/`wcag2aa` + keyboard check | `.disableRules()` to go green |
 | `expect.soft` for multi-checks; visual sparingly | Hard-stop every check; screenshot everything |
-| CI retries ≤2, isolate, `page.clock`, pin locale/TZ | Raise retries, `workers: 1`, wall-clock dates |
+| CI retries ≤2, isolate, `page.clock`, pin locale/TZ | Raise retries, global `workers: 1`, wall-clock dates |

@@ -1,6 +1,11 @@
 {
   "version": 1,
   "hooks": {
+    "stop": [
+      {
+        "command": ".cursor/hooks/generate-eval-report.sh"
+      }
+    ],
     "afterFileEdit": [
       {
         "command": ".cursor/hooks/generation-gate.sh",
@@ -10,6 +15,11 @@
       {
         "command": ".cursor/hooks/assertion-guard.sh",
         "matcher": "Write|TabWrite",
+        "failClosed": true
+      },
+      {
+        "command": ".cursor/hooks/constitution-guard.sh",
+        "matcher": "Write",
         "failClosed": true
       }
     ]
