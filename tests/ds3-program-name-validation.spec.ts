@@ -13,7 +13,10 @@ test.describe("DS-3: Program name validation and duplicate prevention", () => {
     await expect(programsPage.newProgramButton).toBeVisible();
   });
 
-  test("TC-001 — Accept program name with special characters", async ({
+  test(
+    "TC-001 — Accept program name with special characters",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -31,7 +34,10 @@ test.describe("DS-3: Program name validation and duplicate prevention", () => {
     ).toBeVisible();
   });
 
-  test("TC-002 — Leading and trailing spaces are trimmed before validation and save", async ({
+  test(
+    "TC-002 — Leading and trailing spaces are trimmed before validation and save",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -48,7 +54,10 @@ test.describe("DS-3: Program name validation and duplicate prevention", () => {
     await expect(programsPage.programRowName(baseName)).toHaveText(baseName);
   });
 
-  test("TC-003 — Reject program name with only whitespace", async ({ page }) => {
+  test(
+    "TC-003 — Reject program name with only whitespace",
+    { tag: "@regression" },
+    async ({ page }) => {
     const programsPage = new ProgramsPage(page);
     const modal = programsPage.newProgramModal;
     const phantomName = uniqueName("Whitespace Guard Program");
@@ -63,6 +72,7 @@ test.describe("DS-3: Program name validation and duplicate prevention", () => {
 
   test.fixme(
     "TC-004 — Reject duplicate program name",
+    { tag: "@regression" },
     async ({ page, trackProgram }, testInfo) => {
       const programsPage = new ProgramsPage(page);
       const modal = programsPage.newProgramModal;
@@ -94,7 +104,10 @@ test.describe("DS-3: Program name validation and duplicate prevention", () => {
     },
   );
 
-  test("TC-005 — Empty Program Name does not create a program", async ({
+  test(
+    "TC-005 — Empty Program Name does not create a program",
+    { tag: "@regression" },
+    async ({
     page,
   }) => {
     const programsPage = new ProgramsPage(page);
@@ -108,7 +121,10 @@ test.describe("DS-3: Program name validation and duplicate prevention", () => {
     await expect(programsPage.programRow(phantomName)).toHaveCount(0);
   });
 
-  test("TC-006 — Duplicate check is case-sensitive or case-insensitive per product rules", async ({
+  test(
+    "TC-006 — Duplicate check is case-sensitive or case-insensitive per product rules",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -136,6 +152,7 @@ test.describe("DS-3: Program name validation and duplicate prevention", () => {
 
   test.fixme(
     "TC-007 — Duplicate name after trimming whitespace is rejected",
+    { tag: "@regression" },
     async ({ page, trackProgram }, testInfo) => {
     const programsPage = new ProgramsPage(page);
     const modal = programsPage.newProgramModal;
@@ -167,7 +184,10 @@ test.describe("DS-3: Program name validation and duplicate prevention", () => {
   },
   );
 
-  test("TC-008 — Program Name at maximum allowed length (100 characters) is accepted", async ({
+  test(
+    "TC-008 — Program Name at maximum allowed length (100 characters) is accepted",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -189,6 +209,7 @@ test.describe("DS-3: Program name validation and duplicate prevention", () => {
 
   test.fixme(
     "TC-009 — Program Name exceeding 100 characters is rejected",
+    { tag: "@regression" },
     async ({ page, trackProgram }, testInfo) => {
     const programsPage = new ProgramsPage(page);
     const modal = programsPage.newProgramModal;
@@ -212,7 +233,10 @@ test.describe("DS-3: Program name validation and duplicate prevention", () => {
   },
   );
 
-  test("TC-010 — Unicode characters in Program Name are accepted", async ({
+  test(
+    "TC-010 — Unicode characters in Program Name are accepted",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {

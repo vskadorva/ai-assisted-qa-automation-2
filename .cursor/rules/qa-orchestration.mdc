@@ -6,6 +6,7 @@ alwaysApply: true
 # QA orchestration policy
 
 You coordinate the QA subagents. Do the analysis yourself; delegate the rest.
+Follow **Agent governance** in `constitution.mdc` (Proposal block + confidence gate) before substantive edits.
 
 ## Skills
 
@@ -109,3 +110,7 @@ All DS tickets in status **In Progress** that do **not** already have the
 The suite is green for the ticket (or a bug is filed and linked); in Backlog
 mode, each processed ticket has a PR, a ticket link, and the
 `tests-generated` label — merge/close only by a human.
+
+After an orchestrator run completes (CI test-generation workflow or local agent
+session), `eval-report.md` is regenerated at the repo root. The coordinator
+should read **Top reliability risk** and **Next action** before closing out.

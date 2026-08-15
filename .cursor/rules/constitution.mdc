@@ -1,0 +1,67 @@
+---
+description: Always-on Playwright project constitution — non-negotiables, preferences, and refusals
+alwaysApply: true
+---
+
+# Constitution
+
+Non-negotiables for every task. Details live in `playwright-conventions.mdc`; orchestration in `qa-orchestration.mdc`.
+
+## MUST
+
+| Rule | Why |
+|------|-----|
+| Role-based locators (`getByRole`, `getByLabel`, `getByText`) | Stable, a11y-aligned; survives DOM churn |
+| Web-first assertions (`expect(locator)…`) | Auto-retry; no race sleeps |
+| `storageState` auth via setup project | Fast, isolated sessions |
+| Unique, self-cleaning test data (`uniqueName`, `trackProgram`) | No collisions or env pollution |
+| One tag per test — exactly one of `@smoke`, `@sanity`, `@regression`, `@api`, `@e2e`, `@destructive` (not on `describe`) | Traceability; `@destructive` only for shared/global state mutations |
+
+## SHOULD
+
+| Practice | Why |
+|----------|-----|
+| Faker factories for structured test data | Realistic, varied payloads |
+| Enums for repeated UI/API strings | Single source of truth |
+| JSDoc on POM action methods | Intent at the call site |
+
+## WON'T
+
+| Refusal | Instead |
+|---------|---------|
+| XPath / CSS selectors | Re-discover via a11y tree |
+| `waitForTimeout` | Web-first `expect` |
+| Hardcoded secrets | `process.env`, fixtures, `storageState` |
+| `any` type | Explicit types or `unknown` + narrow |
+| Weakened/deleted assertions | Fix POM, app, or escalate |
+| Heal a real app bug | Route to bug-reporter |
+| Tags on `describe` | Tag individual tests only |
+
+## Agent governance
+
+**Behavioral governance (not hook-enforced).** Agents follow this contract; no hooks or scripts enforce it.
+
+### Audit-then-edit contract
+
+Every non-trivial task emits a **Proposal block** before editing:
+
+```
+Proposal
+- Scope: ...
+- Confidence: N/10
+- Rationale: ...
+- Unknowns: ...
+```
+
+### Confidence gate
+
+- **confidence < 5** → do not proceed, ask for the missing input
+- **5-7** → proceed only with explicit unknowns and human approval
+- **>= 8** → proceed
+- **Never invent** a path, enum, env var, credential, or message — ask or explore instead
+
+## Skills & agents
+
+**Skills** (`.cursor/skills/`): `a11y-checks` · `ci-failure-triage` · `didaxis-bulk-cleanup` · `explore-and-generate` · `exploratory-charter` · `jira-bug-reporter` · `jira-ticket-to-gherkin` · `network-mocked-edge-cases` · `playwright-test-cleanup` · `pom-conventions` · `self-heal`
+
+**Agents** (`.cursor/agents/`): `test-writer` (plan → spec) · `triage` (classify red runs) · `bug-reporter` (file confirmed defects)

@@ -15,7 +15,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.newProgramButton).toBeVisible();
   });
 
-  test("TC-001 — Program creation form opens with required fields", async ({
+  test(
+    "TC-001 — Program creation form opens with required fields",
+    { tag: "@smoke" },
+    async ({
     page,
   }) => {
     const programsPage = new ProgramsPage(page);
@@ -43,7 +46,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(modal.closeButton).toBeVisible();
   });
 
-  test("TC-002 — Program is created successfully with valid name and description", async ({
+  test(
+    "TC-002 — Program is created successfully with valid name and description",
+    { tag: "@smoke" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -62,7 +68,10 @@ test.describe("DS-1: Create new academic program", () => {
     ).toBeVisible();
   });
 
-  test("TC-003 — Program is created with name only and empty description", async ({
+  test(
+    "TC-003 — Program is created with name only and empty description",
+    { tag: "@sanity" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -77,7 +86,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.programCell(programName)).toHaveText(programName);
   });
 
-  test("TC-004 — Create button is disabled when Program Name is empty", async ({
+  test(
+    "TC-004 — Create button is disabled when Program Name is empty",
+    { tag: "@sanity" },
+    async ({
     page,
   }) => {
     const programsPage = new ProgramsPage(page);
@@ -89,7 +101,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(modal.programName).toBeVisible();
   });
 
-  test("TC-005 — Create button becomes enabled after entering a valid Program Name", async ({
+  test(
+    "TC-005 — Create button becomes enabled after entering a valid Program Name",
+    { tag: "@sanity" },
+    async ({
     page,
   }) => {
     const programsPage = new ProgramsPage(page);
@@ -102,7 +117,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(modal.createButton).toBeEnabled();
   });
 
-  test("TC-006 — New program appears at the top of the program list", async ({
+  test(
+    "TC-006 — New program appears at the top of the program list",
+    { tag: "@sanity" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -117,7 +135,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.firstProgramRowName(programName)).toBeVisible();
   });
 
-  test("TC-024 — Programs page displays program list with management actions", async ({
+  test(
+    "TC-024 — Programs page displays program list with management actions",
+    { tag: "@sanity" },
+    async ({
     page,
   }) => {
     const programsPage = new ProgramsPage(page);
@@ -134,7 +155,10 @@ test.describe("DS-1: Create new academic program", () => {
     }
   });
 
-  test("TC-025 — Program creation form includes optional AI Generation Config fields", async ({
+  test(
+    "TC-025 — Program creation form includes optional AI Generation Config fields",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -161,7 +185,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.programRow(programName)).toBeVisible();
   });
 
-  test("TC-007 — Whitespace-only Program Name does not create a program", async ({
+  test(
+    "TC-007 — Whitespace-only Program Name does not create a program",
+    { tag: "@regression" },
+    async ({
     page,
   }) => {
     const programsPage = new ProgramsPage(page);
@@ -176,7 +203,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.programRow(programName)).toHaveCount(0);
   });
 
-  test("TC-008 — Canceling the form does not create a program", async ({
+  test(
+    "TC-008 — Canceling the form does not create a program",
+    { tag: "@sanity" },
+    async ({
     page,
   }) => {
     const programsPage = new ProgramsPage(page);
@@ -192,7 +222,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.programRow(programName)).toHaveCount(0);
   });
 
-  test("TC-026 — Closing the form via header X button does not create a program", async ({
+  test(
+    "TC-026 — Closing the form via header X button does not create a program",
+    { tag: "@sanity" },
+    async ({
     page,
   }) => {
     const programsPage = new ProgramsPage(page);
@@ -206,7 +239,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.programRow(programName)).toHaveCount(0);
   });
 
-  test.fixme("TC-011 — Duplicate Program Name is rejected with an error", async ({
+  test.fixme(
+    "TC-011 — Duplicate Program Name is rejected with an error",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }, testInfo) => {
@@ -235,7 +271,10 @@ test.describe("DS-1: Create new academic program", () => {
     ).toHaveCount(1);
   });
 
-  test("TC-012 — Failed create does not close modal or corrupt the program list", async ({
+  test(
+    "TC-012 — Failed create does not close modal or corrupt the program list",
+    { tag: "@regression" },
+    async ({
     page,
   }) => {
     const programsPage = new ProgramsPage(page);
@@ -261,7 +300,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.programRow(programName)).toHaveCount(0);
   });
 
-  test.fixme("TC-013 — Double-clicking Create creates exactly one program", async ({
+  test.fixme(
+    "TC-013 — Double-clicking Create creates exactly one program",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }, testInfo) => {
@@ -300,7 +342,10 @@ test.describe("DS-1: Create new academic program", () => {
     ).toHaveCount(1);
   });
 
-  test("TC-014 — Program Name at minimum valid length is handled correctly", async ({
+  test(
+    "TC-014 — Program Name at minimum valid length is handled correctly",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -330,7 +375,10 @@ test.describe("DS-1: Create new academic program", () => {
     }
   });
 
-  test("TC-015 — Program Name at maximum allowed length (100) is accepted", async ({
+  test(
+    "TC-015 — Program Name at maximum allowed length (100) is accepted",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -352,6 +400,7 @@ test.describe("DS-1: Create new academic program", () => {
   // Known app bug: DS-175 — name over 100 chars is accepted on create
   test.fixme(
     "TC-016 — Program Name exceeding 100 characters is rejected",
+    { tag: "@regression" },
     async ({ page, trackProgram }, testInfo) => {
     const programsPage = new ProgramsPage(page);
     const modal = programsPage.newProgramModal;
@@ -375,7 +424,10 @@ test.describe("DS-1: Create new academic program", () => {
   },
   );
 
-  test("TC-017 — Special characters in Program Name are handled correctly", async ({
+  test(
+    "TC-017 — Special characters in Program Name are handled correctly",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -389,7 +441,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(programsPage.programRow(programName)).toBeVisible();
   });
 
-  test("TC-018 — Unicode and international characters are preserved", async ({
+  test(
+    "TC-018 — Unicode and international characters are preserved",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -406,7 +461,10 @@ test.describe("DS-1: Create new academic program", () => {
     ).toBeVisible();
   });
 
-  test("TC-019 — Leading and trailing spaces in Program Name are trimmed on save", async ({
+  test(
+    "TC-019 — Leading and trailing spaces in Program Name are trimmed on save",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -425,7 +483,10 @@ test.describe("DS-1: Create new academic program", () => {
     expect(savedName).toBe(baseName);
   });
 
-  test("TC-020 — Description at maximum length (500) is accepted", async ({
+  test(
+    "TC-020 — Description at maximum length (500) is accepted",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -449,6 +510,7 @@ test.describe("DS-1: Create new academic program", () => {
   // Known app bug: DS-176 — description over 500 chars is accepted on create
   test.fixme(
     "TC-027 — Description exceeding 500 characters is rejected",
+    { tag: "@regression" },
     async ({ page, trackProgram }, testInfo) => {
     const programsPage = new ProgramsPage(page);
     const modal = programsPage.newProgramModal;
@@ -472,7 +534,10 @@ test.describe("DS-1: Create new academic program", () => {
   },
   );
 
-  test("TC-021 — HTML and script tags in Description are stored as plain text", async ({
+  test(
+    "TC-021 — HTML and script tags in Description are stored as plain text",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -499,7 +564,10 @@ test.describe("DS-1: Create new academic program", () => {
     ).toBeVisible();
   });
 
-  test("TC-022 — Reopening the form after successful create shows empty fields", async ({
+  test(
+    "TC-022 — Reopening the form after successful create shows empty fields",
+    { tag: "@sanity" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -517,7 +585,10 @@ test.describe("DS-1: Create new academic program", () => {
     await expect(modal.description).toHaveValue("");
   });
 
-  test("TC-023 — Program creation form can be submitted via keyboard", async ({
+  test(
+    "TC-023 — Program creation form can be submitted via keyboard",
+    { tag: "@regression" },
+    async ({
     page,
     trackProgram,
   }) => {
@@ -545,7 +616,10 @@ test.describe("DS-1: Create new academic program", () => {
 test.describe("DS-1: Access control", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test("TC-010 — Unauthenticated user cannot open program creation form", async ({
+  test(
+    "TC-010 — Unauthenticated user cannot open program creation form",
+    { tag: "@smoke" },
+    async ({
     page,
   }) => {
     const programsPage = new ProgramsPage(page);
