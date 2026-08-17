@@ -1,5 +1,6 @@
 import { type Locator, type Page } from "@playwright/test";
 import { extractProgramId, getCleanupApiToken } from "../fixtures/program-api";
+import { EditProgramModal } from "./EditProgramModal";
 import { NewProgramModal } from "./NewProgramModal";
 
 type TrackProgram = (uuid: string) => void;
@@ -7,6 +8,7 @@ type TrackProgram = (uuid: string) => void;
 export class ProgramsPage {
   readonly page: Page;
   readonly newProgramModal: NewProgramModal;
+  readonly editProgramModal: EditProgramModal;
   readonly heading: Locator;
   readonly subtitle: Locator;
   readonly newProgramButton: Locator;
@@ -21,6 +23,7 @@ export class ProgramsPage {
   constructor(page: Page) {
     this.page = page;
     this.newProgramModal = new NewProgramModal(page);
+    this.editProgramModal = new EditProgramModal(page);
     this.heading = page.getByRole("heading", { name: "Programs", level: 2 });
     this.subtitle = page.getByText("Manage academic programs and semesters");
     this.newProgramButton = page.getByRole("button", { name: "+ New Program" });
@@ -171,5 +174,40 @@ export class ProgramsPage {
 
   async closeModalWithoutSaving(): Promise<void> {
     await this.newProgramModal.clickCancel();
+  }
+
+  editButtonFor(name: string): Locator {
+    return this.programRow(name).getByRole("button", {
+      name: `Edit ${name}`,
+    });
+  }
+
+  /**
+   * Opens the Edit Program dialog for the named row.
+   */
+  async openEditProgram(name: string): Promise<void> {
+    await this.editButtonFor(name).click();
+  }
+
+  /**
+   * Saves the edit form and waits for a successful PATCH to /api/programs.
+   */
+  async waitForProgramUpdate(action: () => Promise<void>): Promise<void> {
+    await Promise.all([
+      this.page.waitForResponse(
+        (res) =>
+          res.url().includes("/api/programs") &&
+          res.request().method() === "PATCH" &&
+          res.ok(),
+      ),
+      action(),
+    ]);
+  }
+
+  /**
+   * Saves edits via the Edit Program modal (tracks no new UUID).
+   */
+  async saveEditedProgram(): Promise<void> {
+    await this.waitForProgramUpdate(() => this.editProgramModal.clickSave());
   }
 }
